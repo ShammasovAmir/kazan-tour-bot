@@ -1,33 +1,21 @@
 import TelegramBot from 'node-telegram-bot-api';
 import "dotenv/config.js";
-import Koa from 'koa';
 import {initMessageRouter} from "./messageRouter.js";
 import {home} from "./views/home.js";
-import Router from 'koa-router';
-import bodyParser from 'koa-bodyparser';
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
 if (process.env.NODE_ENV === "production") {
-    const bot = new TelegramBot(token);
-    bot.setWebHook(`${process.env.CYCLIC_URL}/bot`);
-
-    const app = new Koa();
-
-    const router = Router();
-    router.post('/bot', ctx => {
-        const {body} = ctx.request;
-        bot.processUpdate(body);
-        ctx.status = 200;
-        start(bot);
+    const bot = new TelegramBot(token, {
+        webHook: {
+            port: process.env.PORT || 3000,
+            autoOpen: false
+        }
     });
 
-    app.use(bodyParser());
-    app.use(router.routes());
-
-    const port = process.env.PORT || 3000;
-    app.listen(port, () => {
-    })
+    bot.openWebHook();
+    bot.setWebHook(`${process.env.CYCLIC_URL}/bot${process.env.TELEGRAM_BOT_TOKEN}`);
+    start(bot);
 } else {
     const bot = new TelegramBot(token, { polling: true });
     start(bot);
