@@ -6,7 +6,7 @@ import {faq} from "./views/faq.js";
 import {nature} from "./views/nature.js";
 import {artGallery} from "./views/faq/art-gallery.js";
 
-export async function initRouter(bot, msg) {
+export async function initMessageRouter(bot, msg) {
     const data = msg.data;
     const chatID = msg.message.chat.id;
     switch (data) {

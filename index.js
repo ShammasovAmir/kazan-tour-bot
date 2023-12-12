@@ -1,11 +1,29 @@
 import TelegramBot from 'node-telegram-bot-api';
 import "dotenv/config.js";
-import {initRouter} from "./router.js";
+import Koa from 'koa';
+import {initMessageRouter} from "./messageRouter.js";
 import {home} from "./views/home.js";
+import Router from 'koa-router';
+import bodyParser from 'koa-bodyparser';
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
+const bot = new TelegramBot(token);
+bot.setWebHook(`${process.env.CYCLIC_URL}/bot`);
 
-const bot = new TelegramBot(token, { polling: true });
+const app = new Koa();
+
+const router = Router();
+router.post('/bot', ctx => {
+    const { body } = ctx.request;
+    bot.processUpdate(body);
+    ctx.status = 200;
+});
+
+app.use(bodyParser());
+app.use(router.routes());
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {})
 
 bot.on('message', async msg => {
     if (msg.text.startsWith('/start')) {
@@ -14,5 +32,5 @@ bot.on('message', async msg => {
 });
 
 bot.on('callback_query', async msg => {
-    await initRouter(bot, msg);
+    await initMessageRouter(bot, msg);
 });
