@@ -7,30 +7,40 @@ import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
-const bot = new TelegramBot(token);
-bot.setWebHook(`${process.env.CYCLIC_URL}/bot`);
 
-const app = new Koa();
+if (process.env.NODE_ENV === "production") {
+    const bot = new TelegramBot(token);
+    bot.setWebHook(`${process.env.CYCLIC_URL}/bot`);
 
-const router = Router();
-router.post('/bot', ctx => {
-    const { body } = ctx.request;
-    bot.processUpdate(body);
-    ctx.status = 200;
-});
+    const app = new Koa();
 
-app.use(bodyParser());
-app.use(router.routes());
+    const router = Router();
+    router.post('/bot', ctx => {
+        const {body} = ctx.request;
+        bot.processUpdate(body);
+        ctx.status = 200;
+    });
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {})
+    app.use(bodyParser());
+    app.use(router.routes());
 
-bot.on('message', async msg => {
-    if (msg.text.startsWith('/start')) {
-        await home(msg, msg.chat.id, bot, true);
-    }
-});
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+    })
+    start(bot);
+} else {
+    const bot = new TelegramBot(token, { polling: true });
+    start(bot);
+}
 
-bot.on('callback_query', async msg => {
-    await initMessageRouter(bot, msg);
-});
+function start(bot) {
+    bot.on('message', async msg => {
+        if (msg.text.startsWith('/start')) {
+            await home(msg, msg.chat.id, bot, true);
+        }
+    });
+
+    bot.on('callback_query', async msg => {
+        await initMessageRouter(bot, msg);
+    });
+}
