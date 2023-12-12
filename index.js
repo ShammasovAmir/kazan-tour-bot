@@ -19,6 +19,7 @@ if (process.env.NODE_ENV === "production") {
         const {body} = ctx.request;
         bot.processUpdate(body);
         ctx.status = 200;
+        start(bot);
     });
 
     app.use(bodyParser());
@@ -27,7 +28,6 @@ if (process.env.NODE_ENV === "production") {
     const port = process.env.PORT || 3000;
     app.listen(port, () => {
     })
-    start(bot);
 } else {
     const bot = new TelegramBot(token, { polling: true });
     start(bot);
